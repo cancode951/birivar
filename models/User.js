@@ -47,6 +47,27 @@ const userSchema = new Schema(
       enum: ['free', 'pro', 'premium'],
       default: 'free',
     },
+    // Yeni abonelik alanları (tier ile uyumlu tutulur)
+    plan: {
+      type: String,
+      enum: ['free', 'pro', 'premium'],
+      default: 'free',
+      index: true,
+    },
+    aiMessageLimit: {
+      type: Number,
+      default: 5,
+      min: 0,
+    },
+    analysisLimit: {
+      type: Number,
+      default: 3,
+      min: 0,
+    },
+    subscriptionEndDate: {
+      type: Date,
+      default: null,
+    },
     // AI Chat kota takibi
     aiUsage: {
       messagesToday: { type: Number, default: 0 },

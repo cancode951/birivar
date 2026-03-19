@@ -23,6 +23,7 @@ const {
   deliverSupportDm,
   migrateLegacySupportBotUsername,
 } = require('./lib/supportBot');
+const { consumeLimit } = require('./middleware/planLimits');
 
 // Route dosyaları
 const authRoutes = require('./authRoutes');
@@ -30,6 +31,8 @@ const aiRoutes = require('./aiRoutes');
 const postRoutes = require('./routes/postRoutes');
 const userRoutes = require('./routes/userRoutes');
 const messageRoutes = require('./routes/messageRoutes');
+const subscriptionRoutes = require('./routes/subscriptionRoutes');
+const { stripeWebhook } = require('./controllers/subscriptionController');
 
 const app = express();
 const server = http.createServer(app);
@@ -44,6 +47,8 @@ app.set('io', io);
 
 // Middleware
 app.use(cors());
+// Stripe webhook raw body ister (json parse öncesi)
+app.post('/api/subscriptions/webhook', express.raw({ type: 'application/json' }), stripeWebhook);
 app.use(express.json());
 
 // Veritabanına bağlan, bot kullanıcı adını güncelle, sonra dinle
@@ -58,6 +63,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
 
 // Socket.io: kullanıcı odası (room) = userId
 io.on('connection', (socket) => {
@@ -210,19 +216,13 @@ app.get('/api/posts/:id/comments', async (req, res) => {
 app.use('/api/posts', postRoutes);
 
 // POST /api/posts/:id/analyze - post + yorumları AI ile analiz edip özet üret
-app.post('/api/posts/:id/analyze', authMiddleware, async (req, res) => {
+app.post('/api/posts/:id/analyze', authMiddleware, consumeLimit('analysis'), async (req, res) => {
   try {
     const { id } = req.params;
 
     const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({ message: 'Kullanıcı bulunamadı.' });
-    }
-
-    if (user.dailyPdfLimit <= 0) {
-      return res
-        .status(403)
-        .json({ message: "Günlük PDF limitin doldu, Pro'ya geç" });
     }
 
     const post = await Post.findById(id).populate(
@@ -290,14 +290,10 @@ app.post('/api/posts/:id/analyze', authMiddleware, async (req, res) => {
       }
     }
 
-    // Kullanıcının günlük PDF hakkını bir azalt
-    user.dailyPdfLimit -= 1;
-    await user.save();
-
     return res.json({
       summary,
       postId: post._id,
-      remainingDailyPdfLimit: user.dailyPdfLimit,
+      remainingAnalysisLimit: req.remainingLimits?.analysisLimit ?? user.analysisLimit,
       title: 'AI Tartışma Akademik Özeti',
     });
   } catch (error) {

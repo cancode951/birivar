@@ -11,6 +11,7 @@ const subscriptionSchema = new Schema(
     },
     plan: {
       type: String,
+      enum: ['free', 'pro', 'premium'],
       required: true,
       trim: true,
     },
@@ -21,9 +22,13 @@ const subscriptionSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ['active', 'expired'],
-      default: 'active',
+      enum: ['pending', 'active', 'expired', 'failed'],
+      default: 'pending',
     },
+    amount: { type: Number, default: 0 },
+    currency: { type: String, default: 'TRY' },
+    paymentProvider: { type: String, default: 'stripe' },
+    metadata: { type: Schema.Types.Mixed, default: {} },
   },
   {
     timestamps: true,

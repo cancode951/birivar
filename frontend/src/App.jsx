@@ -11,6 +11,7 @@ import AnonymousFeed from './pages/AnonymousFeed';
 import Landing from './pages/Landing';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import Pricing from './pages/Pricing';
 import SocketManager from './components/SocketManager';
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
         <Route path="/profile/:userId" element={<Profile />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/pricing" element={<Pricing />} />
         <Route path="/" element={<Landing />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, LogOut, ChevronDown, Menu, MessageCircle, Settings, Sun, Moon } from 'lucide-react';
+import { User, LogOut, ChevronDown, Menu, MessageCircle, Settings, Sun, Moon, Crown } from 'lucide-react';
 import { disconnectSocket } from '../lib/socket';
 import { useUnreadMessages } from '../context/UnreadMessagesContext';
 import { useTheme } from '../context/ThemeContext';
@@ -112,6 +112,15 @@ const Navbar = ({ user, title = 'BiriVar', onMenuClick = null }) => {
             >
               <User className="w-4 h-4" />
               Profilim
+            </Link>
+
+            <Link
+              to="/pricing"
+              onClick={() => setDropdownOpen(false)}
+              className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-200 hover:bg-slate-700 transition"
+            >
+              <Crown className="w-4 h-4" />
+              Plan Yukselt
             </Link>
 
             <button

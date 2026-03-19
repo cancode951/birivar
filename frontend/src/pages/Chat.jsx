@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Paperclip, Send, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
@@ -25,6 +25,7 @@ export default function Chat() {
   const [file, setFile] = useState(null); // { name, mimeType, base64 }
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
+  const [remainingAi, setRemainingAi] = useState(null);
   const fileRef = useRef(null);
 
   useEffect(() => {
@@ -71,6 +72,9 @@ export default function Chat() {
         file: file ? { name: file.name, mimeType: file.mimeType, base64: file.base64 } : null,
       });
       setMessages((prev) => [...prev, { role: 'assistant', text: res.data.reply }]);
+      if (typeof res?.data?.remainingAiMessageLimit === 'number') {
+        setRemainingAi(res.data.remainingAiMessageLimit);
+      }
       setFile(null);
     } catch (err) {
       setError(err?.response?.data?.message || 'Bir hata oluştu.');
@@ -148,7 +152,16 @@ export default function Chat() {
             </div>
 
             <div className="p-3 border-t border-slate-800">
-              {error && <p className="text-xs text-red-300 mb-2">{error}</p>}
+              {error && (
+                <div className="text-xs text-red-300 mb-2">
+                  <p>{error}</p>
+                  {String(error).includes('Limitiniz doldu') && (
+                    <Link to="/pricing" className="text-sky-300 hover:text-sky-200 underline">
+                      Paketleri goruntule
+                    </Link>
+                  )}
+                </div>
+              )}
               {file?.name && (
                 <div className="mb-2 text-xs text-slate-300 flex items-center justify-between border border-slate-800 bg-slate-950/60 rounded-lg px-3 py-2">
                   <span>📎 {file.name}</span>
@@ -200,7 +213,7 @@ export default function Chat() {
                 </button>
               </div>
               <p className="mt-2 text-[11px] text-slate-500">
-                Free: günlük 5 mesaj, toplam 2 dosya • Pro: sınırsız mesaj, günlük 10 dosya • Premium: sınırsız
+                Kalan AI mesaj hakkin: {remainingAi == null ? '—' : remainingAi}
               </p>
             </div>
           </main>

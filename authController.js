@@ -4,6 +4,7 @@ require('dotenv').config();
 
 const User = require('./models/User');
 const sendEmail = require('./utils/sendEmail');
+const { applyPlanLimits } = require('./lib/subscriptionPlans');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const RESET_PASSWORD_SECRET = process.env.RESET_PASSWORD_SECRET || JWT_SECRET;
@@ -45,6 +46,9 @@ const register = async (req, res) => {
       university,
       department,
       tier: 'free',
+      plan: 'free',
+      aiMessageLimit: 5,
+      analysisLimit: 3,
       aiUsage: { messagesToday: 0, filesToday: 0, totalFiles: 0, lastResetDate: null },
     });
 
@@ -78,6 +82,10 @@ const login = async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: 'Geçersiz email veya şifre.' });
     }
+
+    // İstekte belirtildiği gibi girişte plan limitleri yenilenir
+    applyPlanLimits(user, user.plan || user.tier || 'free');
+    await user.save();
 
     const token = jwt.sign(
       {

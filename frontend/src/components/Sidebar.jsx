@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Sparkles, User, ChevronDown, Search, MessagesSquare, PanelLeftClose, PanelLeftOpen, Ghost } from 'lucide-react';
+import { Home, Sparkles, User, ChevronDown, Search, MessagesSquare, PanelLeftClose, PanelLeftOpen, Ghost, Crown } from 'lucide-react';
 import { useTurkeyData } from '../context/TurkeyDataContext';
 import { useLocalStorageBoolean } from '../lib/uiPrefs';
 import { useUnreadMessages } from '../context/UnreadMessagesContext';
@@ -59,7 +59,7 @@ export default function Sidebar() {
 
   return (
     <div
-      className={`space-y-4 transition-[width] duration-200 w-full ${collapsed ? 'lg:w-20' : 'lg:w-64'}`}
+      className={`space-y-4 transition-[width] duration-200 w-full ${collapsed ? 'lg:w-20' : 'lg:w-full'} min-h-0`}
     >
       <div className="flex items-center justify-between">
         <p className={`text-xs font-semibold text-slate-400 px-1 ${collapsed ? 'lg:hidden' : ''}`}>Menü</p>
@@ -78,6 +78,7 @@ export default function Sidebar() {
         <NavItem to="/dashboard" icon={Home} label="Akış" collapsed={collapsed} />
         <NavItem to="/anonymous" icon={Ghost} label="Anonim dertleşme" collapsed={collapsed} />
         <NavItem to="/chat" icon={Sparkles} label="BiriVar AI" collapsed={collapsed} />
+        <NavItem to="/pricing" icon={Crown} label="Abonelik" collapsed={collapsed} />
         <NavItem to="/explore" icon={Search} label="Keşfet" collapsed={collapsed} />
         <NavItem
           to="/messages"

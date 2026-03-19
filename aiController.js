@@ -1,35 +1,5 @@
 const User = require('./models/User');
-
-function getTodayKey() {
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-function getTierLimits(tier) {
-  // Free: günlük 5 mesaj, toplam 2 dosya
-  // Pro: sınırsız mesaj, günlük 10 dosya
-  // Premium: sınırsız mesaj, sınırsız dosya
-  if (tier === 'premium') {
-    return { dailyMessages: Infinity, dailyFiles: Infinity, totalFiles: Infinity };
-  }
-  if (tier === 'pro') {
-    return { dailyMessages: Infinity, dailyFiles: 10, totalFiles: Infinity };
-  }
-  return { dailyMessages: 5, dailyFiles: Infinity, totalFiles: 2 };
-}
-
-function ensureDailyReset(user) {
-  const today = getTodayKey();
-  if (!user.aiUsage) user.aiUsage = {};
-  if (user.aiUsage.lastResetDate !== today) {
-    user.aiUsage.messagesToday = 0;
-    user.aiUsage.filesToday = 0;
-    user.aiUsage.lastResetDate = today;
-  }
-}
+const { getPlanConfig } = require('./lib/subscriptionPlans');
 
 // POST /api/ai/ask (eski endpoint - geriye uyumluluk)
 const askAI = async (req, res) => {
@@ -44,13 +14,6 @@ const askAI = async (req, res) => {
 
     if (!user) {
       return res.status(404).json({ message: 'Kullanıcı bulunamadı.' });
-    }
-
-    // Eski endpointi koruyoruz ama yeni limit mantığına bağlıyoruz (free için günlük 5 mesaj)
-    ensureDailyReset(user);
-    const limits = getTierLimits(user.tier);
-    if (user.aiUsage.messagesToday >= limits.dailyMessages) {
-      return res.status(403).json({ message: 'Günlük mesaj limitin doldu, Pro\'ya geç' });
     }
 
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -115,15 +78,10 @@ ${vakaVerisi || ''}`;
       }
     }
 
-    // Sadece başarılı yanıtta mesaj say
-    user.aiUsage.messagesToday += 1;
-    await user.save();
-
     return res.json({
       plan: result,
-      tier: user.tier,
-      remainingDailyAiLimit:
-        limits.dailyMessages === Infinity ? Infinity : Math.max(0, limits.dailyMessages - user.aiUsage.messagesToday),
+      tier: user.plan || user.tier,
+      remainingAiMessageLimit: req.remainingLimits?.aiMessageLimit ?? user.aiMessageLimit,
       message: 'AI isteği başarıyla işlendi.',
     });
   } catch (error) {
@@ -141,29 +99,16 @@ const chat = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'Kullanıcı bulunamadı.' });
 
-    ensureDailyReset(user);
-    const limits = getTierLimits(user.tier);
-
     const { message, file } = req.body || {};
     if (!message || !String(message).trim()) {
       return res.status(400).json({ message: 'message alanı zorunludur.' });
     }
 
     const isFileAttached = !!file;
-    if (limits.dailyMessages !== Infinity && user.aiUsage.messagesToday >= limits.dailyMessages) {
-      return res.status(403).json({ message: 'Günlük mesaj limitin doldu.' });
-    }
-    if (isFileAttached) {
-      if (limits.dailyFiles !== Infinity && user.aiUsage.filesToday >= limits.dailyFiles) {
-        return res.status(403).json({ message: 'Günlük dosya yükleme limitin doldu.' });
-      }
-      if (limits.totalFiles !== Infinity && user.aiUsage.totalFiles >= limits.totalFiles) {
-        return res.status(403).json({ message: 'Toplam dosya yükleme limitin doldu.' });
-      }
-    }
 
     const systemPrompt =
       "Sen çok yönlü bir akademik asistansın. Kullanıcının yüklediği dosyaları analiz edebilir, sorularını yanıtlayabilir ve onlara her konuda yardımcı olabilirsin. Yanıtların profesyonel, yapıcı ve bilgilendirici olsun.";
+    const planCfg = getPlanConfig(user.plan || user.tier || 'free');
 
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
     let assistantMessage =
@@ -187,7 +132,7 @@ const chat = async (req, res) => {
           Authorization: `Bearer ${OPENAI_API_KEY}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4.1-mini',
+          model: planCfg.model === 'grok' ? 'gpt-4.1-mini' : planCfg.model,
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: contentParts.map((p) => p.text).join('') },
@@ -206,17 +151,12 @@ const chat = async (req, res) => {
       }
     }
 
-    user.aiUsage.messagesToday += 1;
-    if (isFileAttached) {
-      user.aiUsage.filesToday += 1;
-      user.aiUsage.totalFiles += 1;
-    }
-    await user.save();
-
     return res.json({
       reply: assistantMessage,
-      usage: user.aiUsage,
-      limits,
+      plan: user.plan || user.tier,
+      remainingAiMessageLimit: req.remainingLimits?.aiMessageLimit ?? user.aiMessageLimit,
+      remainingAnalysisLimit: req.remainingLimits?.analysisLimit ?? user.analysisLimit,
+      fileAttached: isFileAttached,
     });
   } catch (error) {
     console.error('AI chat hatası:', error.message);

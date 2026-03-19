@@ -79,6 +79,12 @@ export default function Landing() {
                 >
                   Giris Yap
                 </Link>
+                <Link
+                  to="/pricing"
+                  className="rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-semibold px-5 py-2.5 transition"
+                >
+                  Paketleri Incele
+                </Link>
               </div>
             </div>
 
