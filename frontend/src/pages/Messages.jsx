@@ -402,7 +402,7 @@ export default function Messages() {
 
       <div className="flex-1 min-h-0 flex flex-col px-3 sm:px-4 pb-3 pt-2">
         <div className="max-w-7xl mx-auto w-full flex-1 min-h-0 flex flex-col lg:flex-row lg:gap-4 lg:items-stretch">
-          <aside className="hidden lg:block shrink-0 w-[220px] xl:w-56 min-h-0 overflow-y-auto messages-scrollbar pr-1">
+          <aside className="hidden lg:block shrink-0 min-h-0 overflow-y-auto messages-scrollbar pr-1">
             <Sidebar />
           </aside>
 

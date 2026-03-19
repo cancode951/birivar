@@ -59,7 +59,7 @@ export default function Sidebar() {
 
   return (
     <div
-      className={`space-y-4 transition-[width] duration-200 w-full ${collapsed ? 'lg:w-20' : 'lg:w-full'} min-h-0`}
+      className={`space-y-4 transition-[width] duration-200 w-full ${collapsed ? 'lg:w-20' : 'lg:w-64'} min-h-0`}
     >
       <div className="flex items-center justify-between">
         <p className={`text-xs font-semibold text-slate-400 px-1 ${collapsed ? 'lg:hidden' : ''}`}>Menü</p>
