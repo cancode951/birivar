@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Dark scrollbar (opt-in via .sc-scroll) */
+.sc-scroll {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent; /* thumb / track */
+}
+
+.sc-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.sc-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sc-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.25);
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+.sc-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(148, 163, 184, 0.4);
+}
+
+/* PC'de scrollbar çok kalın duruyorsa incelt (mobilde bozmadan) */
+@media (min-width: 768px) {
+  .sc-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .sc-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(148, 163, 184, 0.3);
+    border: 2px solid transparent;
+  }
+
+  .sc-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(148, 163, 184, 0.45);
+  }
+}
+
+/* Mesajlaşma: ince gri scrollbar (IG/WA tarzı) */
+.messages-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(31 41 55) transparent;
+}
+.messages-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.messages-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.messages-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgb(31 41 55);
+  border-radius: 9999px;
+}
+.messages-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(55 65 81);
+}
+
+/* Light mode: dark tasarımı hızlıca aydınlatmak için global invert */
+html.theme-light body {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Fotoğraflar/ikonlar double-invert olmasın */
+html.theme-light img,
+html.theme-light video {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* Landing / auth-light gibi zaten aydınlık tasarlanan sayfaları invert'ten çıkar */
+html.theme-light .no-theme-invert {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+html.theme-light .no-theme-invert img,
+html.theme-light .no-theme-invert video {
+  filter: none !important;
+}
