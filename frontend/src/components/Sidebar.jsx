@@ -33,7 +33,7 @@ const NavItem = ({ to, icon: Icon, label, collapsed, badgeCount = 0 }) => {
 };
 
 export default function Sidebar() {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useLocalStorageBoolean('sc_sidebar_collapsed', false);
   const { unreadCount } = useUnreadMessages();
   const {

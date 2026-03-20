@@ -68,6 +68,33 @@ const userSchema = new Schema(
       type: Date,
       default: null,
     },
+    referralCode: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+      index: true,
+    },
+    referredUsers: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
+    referredCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    referralRewardsGranted: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    referralRewardPendingToast: {
+      type: Boolean,
+      default: false,
+    },
     // AI Chat kota takibi
     aiUsage: {
       messagesToday: { type: Number, default: 0 },

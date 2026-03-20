@@ -12,6 +12,7 @@ import Landing from './pages/Landing';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Pricing from './pages/Pricing';
+import ReferralProgram from './pages/ReferralProgram';
 import SocketManager from './components/SocketManager';
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/pricing" element={<Pricing />} />
+        <Route path="/referral" element={<ReferralProgram />} />
         <Route path="/" element={<Landing />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Navbar from '../components/Navbar';
 
 const api = axios.create({ baseURL: '' });
 api.interceptors.request.use((config) => {
@@ -18,10 +19,19 @@ export default function Pricing() {
   const [currentPlan, setCurrentPlan] = useState('free');
   const [plans, setPlans] = useState([]);
 
+  const currentUser = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || 'null');
+    } catch {
+      return null;
+    }
+  }, []);
+
   useEffect(() => {
     const flag = params.get('payment');
     if (flag === 'success') toast.success('Odeme basarili. Planin guncelleniyor.');
     if (flag === 'cancel') toast('Odeme iptal edildi.');
+    if (flag === 'fail') toast.error('Odeme tamamlanamadi veya iptal edildi.');
   }, [params]);
 
   useEffect(() => {
@@ -67,12 +77,7 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] text-[#111827] no-theme-invert">
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-          <Link to="/" className="font-semibold text-gray-900">BiriVar</Link>
-          <Link to="/dashboard" className="text-sm text-blue-700 font-semibold">Akisa don</Link>
-        </div>
-      </header>
+      <Navbar user={currentUser} title="BiriVar" surface="light" />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center">Abonelik Paketleri</h1>

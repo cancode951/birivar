@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import Select from 'react-select';
 import { useTurkeyData } from '../context/TurkeyDataContext';
 
 const Register = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { loading: turkeyLoading, error: turkeyError, universities, filteredDepartments } = useTurkeyData();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -14,6 +15,7 @@ const Register = () => {
   const [selectedDepartmentOption, setSelectedDepartmentOption] = useState(null); // { value, label }
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const referralCode = String(searchParams.get('ref') || '').trim().toUpperCase();
 
   const universityOptions = useMemo(() => {
     const list = Array.isArray(universities) ? universities : [];
@@ -75,6 +77,7 @@ const Register = () => {
         password,
         university,
         department,
+        referralCode: referralCode || undefined,
       });
       navigate('/login');
     } catch (err) {
@@ -91,6 +94,11 @@ const Register = () => {
           BiriVar
         </h1>
         <p className="text-slate-400 text-sm text-center mb-4">Yeni hesap oluştur</p>
+        {referralCode ? (
+          <p className="text-xs text-emerald-300 text-center mb-3">
+            Davet kodu uygulandı: <span className="font-semibold">{referralCode}</span>
+          </p>
+        ) : null}
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="block text-xs font-medium text-slate-300 mb-1">Kullanıcı adı</label>

@@ -127,31 +127,34 @@ export default function Chat() {
             <Sidebar />
           </aside>
 
-          <main className="rounded-xl bg-slate-900/70 border border-slate-800 overflow-hidden flex flex-col min-h-[70vh]">
-            <div className="px-4 py-3 border-b border-slate-800">
-              <h2 className="text-sm font-semibold text-slate-200">BiriVar AI</h2>
-              <p className="text-xs text-slate-400">ChatGPT tarzı sohbet</p>
+          <main className="rounded-2xl bg-slate-900/70 border border-slate-800 overflow-hidden flex flex-col min-h-[72vh] shadow-xl">
+            <div className="px-5 py-3 border-b border-slate-800 bg-slate-900/80">
+              <h2 className="text-sm font-semibold text-slate-100">BiriVar AI</h2>
+              <p className="text-xs text-slate-400">Akademik odakli profesyonel sohbet</p>
             </div>
 
-            <div className="flex-1 p-4 space-y-3 overflow-y-auto">
-              {messages.map((m, idx) => (
-                <div
-                  key={idx}
-                  className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm border ${
-                    m.role === 'user'
-                      ? 'ml-auto bg-sky-500/10 border-sky-500/30 text-slate-100'
-                      : 'mr-auto bg-slate-950/60 border-slate-800 text-slate-100'
-                  }`}
-                >
-                  {m.file?.name && (
-                    <p className="text-[11px] text-slate-400 mb-1">📎 {m.file.name}</p>
-                  )}
-                  <p className="whitespace-pre-line">{m.text}</p>
-                </div>
-              ))}
+            <div className="flex-1 overflow-y-auto messages-scrollbar bg-gradient-to-b from-slate-950/30 to-slate-950/50">
+              <div className="max-w-3xl mx-auto px-4 sm:px-6 py-5 space-y-3">
+                {messages.map((m, idx) => (
+                  <div key={idx} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div
+                      className={`max-w-[88%] rounded-2xl px-4 py-2.5 text-sm border shadow-sm ${
+                        m.role === 'user'
+                          ? 'bg-sky-500/15 border-sky-500/35 text-slate-100'
+                          : 'bg-slate-900/80 border-slate-700 text-slate-100'
+                      }`}
+                    >
+                      {m.file?.name && (
+                        <p className="text-[11px] text-slate-400 mb-1">📎 {m.file.name}</p>
+                      )}
+                      <p className="whitespace-pre-line leading-relaxed">{m.text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="p-3 border-t border-slate-800">
+            <div className="p-3 border-t border-slate-800 bg-slate-900/90">
               {error && (
                 <div className="text-xs text-red-300 mb-2">
                   <p>{error}</p>

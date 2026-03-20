@@ -15,9 +15,22 @@ const subscriptionSchema = new Schema(
       required: true,
       trim: true,
     },
+    /** Stripe Checkout Session id — sadece Stripe ödemelerinde set edilir */
     stripeSessionId: {
       type: String,
-      required: true,
+      sparse: true,
+      unique: true,
+    },
+    /** Iyzico CheckoutForm conversationId */
+    iyzicoConversationId: {
+      type: String,
+      sparse: true,
+      unique: true,
+    },
+    /** Iyzico oturum token (callback eşlemesi) */
+    iyzicoPaymentToken: {
+      type: String,
+      sparse: true,
       unique: true,
     },
     status: {
@@ -36,4 +49,3 @@ const subscriptionSchema = new Schema(
 );
 
 module.exports = mongoose.model('Subscription', subscriptionSchema);
-

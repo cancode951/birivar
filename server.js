@@ -32,7 +32,7 @@ const postRoutes = require('./routes/postRoutes');
 const userRoutes = require('./routes/userRoutes');
 const messageRoutes = require('./routes/messageRoutes');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
-const { stripeWebhook } = require('./controllers/subscriptionController');
+const { stripeWebhook, iyzicoCallback } = require('./controllers/subscriptionController');
 
 const app = express();
 const server = http.createServer(app);
@@ -49,6 +49,13 @@ app.set('io', io);
 app.use(cors());
 // Stripe webhook raw body ister (json parse öncesi)
 app.post('/api/subscriptions/webhook', express.raw({ type: 'application/json' }), stripeWebhook);
+// Iyzico CheckoutForm callback (genelde x-www-form-urlencoded + token)
+app.post(
+  '/api/subscriptions/iyzico/callback',
+  express.urlencoded({ extended: true }),
+  iyzicoCallback
+);
+app.get('/api/subscriptions/iyzico/callback', iyzicoCallback);
 app.use(express.json());
 
 // Veritabanına bağlan, bot kullanıcı adını güncelle, sonra dinle

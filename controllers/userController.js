@@ -307,6 +307,53 @@ async function searchUsers(req, res) {
   }
 }
 
+// GET /api/users/referral/me
+async function getReferralStatus(req, res) {
+  try {
+    const uid = req.user?._id;
+    if (!uid) return res.status(401).json({ message: 'Yetkisiz.' });
+
+    const user = await User.findById(uid).select(
+      'referralCode referredCount referralRewardsGranted referralRewardPendingToast plan subscriptionEndDate'
+    );
+    if (!user) return res.status(404).json({ message: 'Kullanıcı bulunamadı.' });
+
+    if (!user.referralCode) {
+      user.referralCode = Math.random().toString(36).slice(2, 8).toUpperCase();
+      await user.save();
+    }
+
+    const count = Number(user.referredCount || 0);
+    const inCycle = count % 3;
+    // Çevrim içi doluluk: 0 davette 0; 1–2 davette mod; her 3'te tam dolu (3, 6, 9…)
+    const progress = inCycle === 0 && count > 0 ? 3 : inCycle;
+    const remainingForNext = progress === 3 ? 0 : 3 - progress;
+    const rewardUnlocked = Boolean(user.referralRewardPendingToast);
+
+    if (user.referralRewardPendingToast) {
+      user.referralRewardPendingToast = false;
+      await user.save();
+    }
+
+    const frontendBase = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const link = `${frontendBase}/register?ref=${user.referralCode}`;
+
+    return res.json({
+      referralCode: user.referralCode,
+      referralLink: link,
+      referredCount: count,
+      progress,
+      remainingForNext,
+      rewardUnlocked,
+      plan: user.plan || 'free',
+      subscriptionEndDate: user.subscriptionEndDate || null,
+    });
+  } catch (error) {
+    console.error('Referral status hatası:', error?.message || error);
+    return res.status(500).json({ message: 'Sunucu hatası' });
+  }
+}
+
 module.exports = {
   getUserById,
   updateAvatar,
@@ -314,5 +361,6 @@ module.exports = {
   updateBanner,
   searchUsers,
   updateProfile,
+  getReferralStatus,
 };
 

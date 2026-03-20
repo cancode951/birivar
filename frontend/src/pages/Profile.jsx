@@ -22,6 +22,8 @@ import toast from 'react-hot-toast';
 import CommentThread from '../components/CommentThread';
 import Sidebar from '../components/Sidebar';
 import PostCardSkeleton from '../components/skeletons/PostCardSkeleton';
+import ReferralCard from '../components/ReferralCard';
+import ReferralProgress from '../components/ReferralProgress';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -1282,6 +1284,10 @@ const Profile = () => {
           )}
           </div>
         </div>
+
+        {/* Referans ilerlemesi + davet paneli - sadece profil sahibi */}
+        {isOwner && <ReferralProgress className="mb-4" />}
+        {isOwner && <ReferralCard />}
 
         {/* BiriVar AI limitleri - sadece profil sahibi görür */}
         {isOwner && (

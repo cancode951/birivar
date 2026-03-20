@@ -11,6 +11,20 @@ const RESET_PASSWORD_SECRET = process.env.RESET_PASSWORD_SECRET || JWT_SECRET;
 const FORGOT_COOLDOWN_MS = 60 * 1000;
 const forgotAttemptsByIp = new Map();
 
+function randomReferralCode() {
+  return Math.random().toString(36).slice(2, 8).toUpperCase();
+}
+
+async function generateUniqueReferralCode() {
+  for (let i = 0; i < 10; i += 1) {
+    const code = randomReferralCode();
+    // eslint-disable-next-line no-await-in-loop
+    const exists = await User.exists({ referralCode: code });
+    if (!exists) return code;
+  }
+  return `${Date.now().toString(36).slice(-6).toUpperCase()}`;
+}
+
 if (!JWT_SECRET) {
   throw new Error('JWT_SECRET ortam değişkeni tanımlı değil.');
 }
@@ -18,7 +32,7 @@ if (!JWT_SECRET) {
 // POST /api/auth/register
 const register = async (req, res) => {
   try {
-    const { username, email, password, university, department } = req.body;
+    const { username, email, password, university, department, referralCode } = req.body;
 
     if (!username || !email || !password) {
       return res
@@ -38,6 +52,7 @@ const register = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+    const ownReferralCode = await generateUniqueReferralCode();
 
     const user = await User.create({
       username,
@@ -49,8 +64,46 @@ const register = async (req, res) => {
       plan: 'free',
       aiMessageLimit: 5,
       analysisLimit: 3,
+      referralCode: ownReferralCode,
       aiUsage: { messagesToday: 0, filesToday: 0, totalFiles: 0, lastResetDate: null },
     });
+
+    // Referral ile kayıt geldiyse davet eden kullanıcıyı güncelle
+    if (referralCode && String(referralCode).trim()) {
+      const inviter = await User.findOne({
+        referralCode: String(referralCode).trim().toUpperCase(),
+      });
+      if (inviter && String(inviter._id) !== String(user._id)) {
+        const alreadyAdded = (inviter.referredUsers || []).some(
+          (id) => String(id) === String(user._id)
+        );
+        if (!alreadyAdded) {
+          inviter.referredUsers = [...(inviter.referredUsers || []), user._id];
+          inviter.referredCount = Number(inviter.referredCount || 0) + 1;
+
+          const totalMilestones = Math.floor(Number(inviter.referredCount || 0) / 3);
+          const toGrant = totalMilestones - Number(inviter.referralRewardsGranted || 0);
+          if (toGrant > 0) {
+            // Her 3 davete 1 hafta premium; kalan süre üzerine ekler.
+            const baseTs =
+              inviter.subscriptionEndDate && new Date(inviter.subscriptionEndDate).getTime() > Date.now()
+                ? new Date(inviter.subscriptionEndDate).getTime()
+                : Date.now();
+            const nextEnd = new Date(baseTs + toGrant * 7 * 24 * 60 * 60 * 1000);
+
+            inviter.plan = 'premium';
+            inviter.tier = 'premium';
+            inviter.aiMessageLimit = Math.max(Number(inviter.aiMessageLimit || 0), 30);
+            inviter.analysisLimit = Math.max(Number(inviter.analysisLimit || 0), 10);
+            inviter.subscriptionEndDate = nextEnd;
+            inviter.referralRewardsGranted = totalMilestones;
+            inviter.referralRewardPendingToast = true;
+          }
+
+          await inviter.save();
+        }
+      }
+    }
 
     const userWithoutPassword = user.toObject();
     delete userWithoutPassword.password;

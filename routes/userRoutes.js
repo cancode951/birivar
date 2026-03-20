@@ -8,6 +8,7 @@ const {
   updateBanner,
   searchUsers,
   updateProfile,
+  getReferralStatus,
 } = require('../controllers/userController');
 
 const router = express.Router();
@@ -39,6 +40,9 @@ router.patch(
 
 // GET /api/users/search?q= (auth)
 router.get('/search', authMiddleware, searchUsers);
+
+// GET /api/users/referral/me (auth)
+router.get('/referral/me', authMiddleware, getReferralStatus);
 
 // GET /api/users/:userId
 router.get('/:userId', getUserById);
